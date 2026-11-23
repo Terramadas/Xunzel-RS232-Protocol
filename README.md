@@ -41,6 +41,8 @@ Xunzel points buyers to the WatchPower / SolarPower phone apps (iOS and Android)
 
 To be fair: we have **not** captured the Wi-Fi module's network traffic, so we cannot say exactly what it sends. We only know what the manufacturer's documentation says it does. If you can measure it, please tell us.
 
+On our kit the Wi-Fi module has never been connected to a home network, so we have not seen it send anything. The concern is about what it would do if it were. We also looked for a way to switch the module's radio off for a radio-free house. We found no setting in the manual or on the inverter's menu, and without an internal web page there is nowhere else to look. If you know a way, please tell us.
+
 We have nothing against Xunzel. The kit works well and their support answered our question helpfully. This project exists to help other owners who want the same local, private setup.
 
 ---
