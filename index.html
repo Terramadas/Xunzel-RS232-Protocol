@@ -69,6 +69,7 @@
   <nav aria-label="Contents">
     <ul>
       <li><a href="#why">Why read-only</a></li>
+      <li><a href="#privacy">Privacy</a></li>
       <li><a href="#wiring">Wiring</a></li>
       <li><a href="#start">Quick start</a></li>
       <li><a href="#commands">Commands</a></li>
@@ -95,6 +96,18 @@
   <li><strong>To change a setting,</strong> do it on the inverter itself, following Xunzel's instructions.</li>
 </ul>
 <p>The rule is enforced in code: the script has a whitelist of query commands (all start with <code>Q</code>), one place that writes to the port, no way to type a command, and a self-test that checks setting commands are refused.</p>
+
+<h2 id="privacy">Why not the cloud app? (privacy)</h2>
+<p>Xunzel points buyers to the WatchPower / SolarPower phone apps (iOS and Android). Those apps work through a Wi-Fi module that sends the inverter's data to a <strong>cloud server</strong>. The platform maker's own description of its Wi-Fi module lists &ldquo;cloud storage for history data and event log&rdquo; and &ldquo;remote monitoring and control of multiple inverters via mobile APP&rdquo;.</p>
+<p class="note"><strong>We do not want that, and we think you should think twice.</strong></p>
+<ul>
+  <li><strong>Your electricity use is a diary of your life.</strong> A record of when power is used, minute by minute, shows when you are home, when you sleep, when you are away on holiday, and more. That data should not be stored on someone else's server, or even pushed to one.</li>
+  <li><strong>You cannot see where it goes.</strong> Once the module is online, data can leave your house without you noticing. Who runs the server, where it is, and who can read the data is not something we could find out.</li>
+  <li><strong>Remote control is the same door.</strong> An app that can change settings from anywhere is exactly what we do not want near a battery system. This tool only reads.</li>
+  <li><strong>A cable cannot leak.</strong> A logger on the RS-232 port, on a network that has no route to the internet, has nothing to send anywhere.</li>
+  <li><strong>There is no local alternative from Xunzel.</strong> We asked Xunzel support how to reach the inverter's internal web page. Their written answer (June 2026): &ldquo;This inverter does not have an internal web interface.&rdquo; The inverter's Wi-Fi module gives you an address on its own network, but no page to open. The PC software is hard to find on Xunzel's site, which steers people to the phone apps.</li>
+</ul>
+<p>To be fair: we have <strong>not</strong> captured the Wi-Fi module's network traffic, so we cannot say exactly what it sends. We only know what the manufacturer's documentation says it does. If you can measure it, please tell us.</p>
 
 <h2 id="wiring">Wiring</h2>
 <figure>
@@ -149,7 +162,7 @@ python3 xunzel_readonly.py</code></pre>
 <h3>Is it safe for my warranty?</h3>
 <p>We only send read queries, like monitoring software does, but we cannot speak for Xunzel. Check your own warranty terms.</p>
 <h3>Why not use WatchPower?</h3>
-<p>You can. This is a small, scriptable alternative that runs without a GUI, logs to CSV and is easy to turn into an always-on logger (Arduino or Raspberry Pi with a MAX3232 level shifter).</p>
+<p>The mobile app and Wi-Fi module send your data to a cloud server (see <a href="#privacy">Privacy</a>). This tool keeps everything local, logs to CSV and is easy to turn into an always-on logger (Arduino or Raspberry Pi with a MAX3232 level shifter).</p>
 <h3>Where is the manual for the IXS-ON 7200?</h3>
 <p>Your kit comes with a paper copy. Xunzel's datasheet lists the specifications; for the full manual ask <a href="mailto:info@xunzel.com">info@xunzel.com</a>.</p>
 

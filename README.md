@@ -27,6 +27,22 @@ The rule is enforced in code, not just by good intentions: see [How read-only is
 
 ---
 
+## Why not the cloud app? (privacy)
+
+Xunzel points buyers to the WatchPower / SolarPower phone apps (iOS and Android). Those apps work through a Wi-Fi module that sends the inverter's data to a **cloud server**. The platform maker's own description of its Wi-Fi module lists "cloud storage for history data and event log" and "remote monitoring and control of multiple inverters via mobile APP".
+
+**We do not want that, and we think you should think twice.**
+
+- **Your electricity use is a diary of your life.** A record of when power is used, minute by minute, shows when you are home, when you sleep, when you are away on holiday, and more. That data should not be stored on someone else's server, or even pushed to one.
+- **You cannot see where it goes.** Once the module is online, data can leave your house without you noticing. Who runs the server, where it is, and who can read the data is not something we could find out.
+- **Remote control is the same door.** An app that can change settings from anywhere is exactly what we do not want near a battery system. This tool only reads.
+- **A cable cannot leak.** A logger on the RS-232 port, on a network that has no route to the internet, has nothing to send anywhere.
+- **There is no local alternative from Xunzel.** We asked Xunzel support how to reach the inverter's internal web page. Their written answer (June 2026): "This inverter does not have an internal web interface." The inverter's Wi-Fi module gives you an address on its own network, but no page to open. The PC software is hard to find on Xunzel's site, which steers people to the phone apps.
+
+To be fair: we have **not** captured the Wi-Fi module's network traffic, so we cannot say exactly what it sends. We only know what the manufacturer's documentation says it does. If you can measure it, please tell us.
+
+---
+
 ## What you need
 
 - A computer with **Python 3** (macOS or Linux; no extra packages).
