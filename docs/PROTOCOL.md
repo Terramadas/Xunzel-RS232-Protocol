@@ -251,7 +251,7 @@ A real reply:
 
 Notes:
 
-- The generic document lists battery type 0 (AGM), 1 (flooded) and 2 (user). This inverter reports **8**. Other PI30 documents use further codes for lithium batteries with communication, but this is unconfirmed. Look at the inverter's display to see what it calls the setting.
+- The generic document lists battery type 0 (AGM), 1 (flooded) and 2 (user). This inverter reports **8**. On this kit the inverter's own menu (PROGRAM 05) is set to **LIb**, "LIb-protocol compatible battery", so 8 very likely means LIb. That is our reading, not confirmed by Xunzel. See [section 10](#10-the-battery-and-the-lib-setting).
 - The rated 7200 VA / 7200 W and machine type `01` (off grid) match the product.
 - The battery voltages (57.6 V bulk and float, 46.4 V under voltage) look like a 16-cell lithium pack, but that is an inference.
 
@@ -337,3 +337,36 @@ A simple log line, the same as the tool's `--csv` output: `2026-11-23T14:25:52Z,
 | `QPIWS` | 32 characters | 36 characters |
 | `QFLAG` letters | upper case | lower case |
 | Models covered | HS, MS, MSX (1 to 5 kVA) | The 7200 W is not listed, so treat every label as likely until checked |
+
+---
+
+## 10. The battery and the LIb setting
+
+This section comes from the kit's own paper manuals and a photo of the battery specification page. It is not read over RS-232.
+
+**Battery in the kit:** 2 x Xunzel SOLARX-Lithium WALL2 10KWH-51.2V-200A (model code SXLW210K).
+
+| Battery specification | Value |
+|---|---|
+| Nominal voltage / capacity / energy | 51.2 V / 200 Ah / 10240 Wh |
+| Max charging and discharging current | 200 A each |
+| Charging voltage | 55.2 to 57.6 V |
+| End of discharge voltage | 44.8 V (backup use), 48 V (cycle use) |
+| Operating temperature | charge 0 to +55 C, discharge -20 to +55 C (standard product) |
+| Communication interface | RS485 and CAN |
+| Parallel support | up to 6 |
+
+**How the battery is connected:** battery 2 is linked to battery 1 with a data cable, and battery 1 is linked to the inverter. The manuals describe the link as RS485. This is a **separate port** from the RS-232 port used here, so this project never touches the battery link.
+
+**Inverter setting:** on the inverter's menu, PROGRAM 05 (battery type) is set to **LIb**. The inverter menu text says that choosing LIb automatically sets programs 02, 26, 27 and 29 (in other Voltronic manuals these are max charging current, bulk voltage, float voltage and low DC cut-off voltage), so no further setting is needed.
+
+**How this fits the QPIRI values:**
+
+| QPIRI field | Value on this kit | Battery specification |
+|---|---|---|
+| Battery bulk voltage (11) | 57.6 V | top of the 55.2 to 57.6 V charging range |
+| Battery float voltage (12) | 57.6 V | same |
+| Battery under voltage (10) | 46.4 V | between 44.8 V and 48 V end of discharge |
+| Max charging current (15) | 10 A | batteries allow 200 A each |
+
+The voltages sit inside the battery's own limits. The 10 A figure looks low for two 200 A batteries. With a communicating lithium battery the battery's management system normally sets the real charge limit over the data cable, so 10 A may only be a placeholder. We have not confirmed this. If you want to check, watch `QPIGS` field 10 (battery charging current) and field 20 (PV charging power) in strong sun with a part-empty battery. We read it; we do not change it.

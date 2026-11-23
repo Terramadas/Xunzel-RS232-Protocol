@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://terramadas.github.io/Xunzel-RS232-Protocol/sitemap.xml

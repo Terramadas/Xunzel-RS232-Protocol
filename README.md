@@ -126,7 +126,7 @@ The Xunzel talks the common Voltronic/Axpert "PI30" protocol, but not exactly th
 - **Answers NAK (not supported):** `QPI` and `QVFW2`. Do not rely on `QPI` to detect the protocol.
 - **More fields than documented:** `QPIGS` returns 21 fields (the document describes 17), `QPIRI` 28 (document: 25), `QDI` 26 (document: 25), and `QPIWS` 36 characters (document: 32). The extra fields are listed in the protocol document, with their likely meaning marked as unconfirmed.
 - **Reply times:** 0.05 to 0.5 seconds. Polling `QPIGS` every 10 seconds is comfortable.
-- **Pre-configured for the batteries:** the battery voltages and charge settings in the inverter differ from the factory defaults that `QDI` reports, as you would expect if the installer set them up for the lithium batteries. The inverter also reports battery type code 8, which the generic document does not describe.
+- **Pre-configured for the batteries:** the battery voltages and charge settings in the inverter differ from the factory defaults that `QDI` reports, as you would expect if the installer set them up for the lithium batteries. The inverter also reports battery type code 8, which the generic document does not describe. On this kit the inverter menu shows battery type **LIb** (lithium battery with communication), so 8 very likely means LIb. The batteries (2 x Xunzel SOLARX-Lithium WALL2 10 kWh) talk to the inverter over a separate RS485 link, which this project never touches. Details in [docs/PROTOCOL.md](docs/PROTOCOL.md#10-the-battery-and-the-lib-setting).
 - **Off-grid:** with no grid connected, `QPIWS` always reports `LINE_FAIL`. That is normal.
 - **PV voltage matches the leaflet:** the PV input voltage reads about 270 to 280 V in daylight, which fits seven 425 W panels per string as drawn in the leaflet (Voc about 295 V).
 
@@ -143,8 +143,13 @@ Reports from other Xunzel or Voltronic-family inverters are welcome. If you shar
 |---|---|
 | `xunzel_readonly.py` | The read-only tool with menu |
 | `docs/PROTOCOL.md` | Protocol reference: frames, CRC, commands, field tables |
+| `index.html` | The same story as a web page (for GitHub Pages) |
 | `docs/images/` | Wiring leaflet, cable drawing (PNG and SVG) |
 | `examples/sample-output.txt` | Real output, serial number removed |
+
+## Search terms
+
+Xunzel IXS-ON 7200 RS232, Xunzel inverter RS-232 protocol, Xunzel PACK ZERO+ monitoring, IXS-ON-7200W-48V serial port, Xunzel inverter logging, Xunzel SOLARX-Lithium WALL2 inverter communication, Voltronic Axpert compatible Xunzel, QPIGS QPIRI QMOD Xunzel, Leroy Merlin Xunzel kit, WatchPower alternative.
 
 ## Licence
 

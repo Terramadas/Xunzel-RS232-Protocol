@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xunzel IXS-ON 7200 RS-232 monitoring: read-only protocol guide and Python tool</title>
+<meta name="description" content="How to read live values, settings and warnings from a Xunzel IXS-ON 7200 solar inverter (PACK ZERO+ kit) over RS-232. Wiring, protocol, CRC, field tables and a free read-only Python tool.">
+<meta name="keywords" content="Xunzel IXS-ON 7200, Xunzel RS232, Xunzel inverter protocol, PACK ZERO+, IXS-ON-7200W-48V, Xunzel monitoring, Xunzel logging, SOLARX-Lithium WALL2, Voltronic Axpert, QPIGS, QPIRI, QMOD, WatchPower">
+<meta name="author" content="Terramadas">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://terramadas.github.io/Xunzel-RS232-Protocol/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Xunzel IXS-ON 7200 RS-232 monitoring: read-only protocol guide and Python tool">
+<meta property="og:description" content="Wiring, protocol and a free read-only Python tool for the Xunzel IXS-ON 7200 inverter in the PACK ZERO+ solar kit.">
+<meta property="og:url" content="https://terramadas.github.io/Xunzel-RS232-Protocol/">
+<meta property="og:image" content="https://terramadas.github.io/Xunzel-RS232-Protocol/docs/images/rs232-cable-rj45-db9.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Xunzel IXS-ON 7200 RS-232 monitoring: read-only protocol guide and Python tool",
+  "description": "How to read live values, settings and warnings from a Xunzel IXS-ON 7200 solar inverter over RS-232, with wiring, protocol notes and a read-only Python tool.",
+  "inLanguage": "en",
+  "author": {"@type": "Organization", "name": "Terramadas"},
+  "mainEntityOfPage": "https://terramadas.github.io/Xunzel-RS232-Protocol/",
+  "about": ["Xunzel IXS-ON 7200", "RS-232", "solar inverter monitoring", "PACK ZERO+"],
+  "codeRepository": "https://github.com/Terramadas/Xunzel-RS232-Protocol",
+  "license": "https://opensource.org/licenses/MIT"
+}
+</script>
+<style>
+  :root { --fg:#1f2933; --muted:#52606d; --bg:#fbfaf7; --card:#fff; --accent:#2f6f4f; --line:#e1ded6; --warn:#fff4d6; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e6e8ea; --muted:#a0a8b0; --bg:#15181b; --card:#1d2125; --accent:#7fcf9f; --line:#33393f; --warn:#3a3217; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 52rem; margin: 0 auto; padding: 2rem 1.2rem 4rem; }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 .5rem; }
+  h2 { margin-top: 2.6rem; padding-top: .4rem; border-top: 1px solid var(--line); font-size: 1.4rem; }
+  a { color: var(--accent); }
+  img { max-width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); background: #fff; }
+  figure { margin: 1.2rem 0; }
+  figcaption { color: var(--muted); font-size: .85rem; margin-top: .3rem; }
+  .lead { font-size: 1.15rem; color: var(--muted); }
+  .note { background: var(--warn); border-left: 4px solid #d9a400; padding: .8rem 1rem; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .95rem; display: block; overflow-x: auto; }
+  th, td { border: 1px solid var(--line); padding: .4rem .6rem; text-align: left; vertical-align: top; }
+  th { background: var(--card); }
+  pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9rem; }
+  pre { background: var(--card); border: 1px solid var(--line); padding: .8rem 1rem; border-radius: 6px; overflow-x: auto; }
+  nav ul { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem 1rem; }
+  footer { margin-top: 3rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+  .btn { display: inline-block; padding: .5rem 1rem; border-radius: 6px; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; margin-right: .5rem; }
+  @media (prefers-color-scheme: dark) { .btn { color: #0c1a12; } }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <h1>Xunzel IXS-ON 7200: read-only RS-232 monitoring</h1>
+  <p class="lead">Read live values, settings and warnings from a <strong>Xunzel IXS-ON 7200 W</strong> solar inverter over its RS-232 port, with one small Python script and a menu. No packages to install.</p>
+  <p>
+    <a class="btn" href="https://github.com/Terramadas/Xunzel-RS232-Protocol">Get it on GitHub</a>
+    <a class="btn" href="https://github.com/Terramadas/Xunzel-RS232-Protocol/blob/main/docs/PROTOCOL.md">Protocol reference</a>
+  </p>
+  <nav aria-label="Contents">
+    <ul>
+      <li><a href="#why">Why read-only</a></li>
+      <li><a href="#wiring">Wiring</a></li>
+      <li><a href="#start">Quick start</a></li>
+      <li><a href="#commands">Commands</a></li>
+      <li><a href="#found">What we found</a></li>
+      <li><a href="#battery">Battery</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+  </nav>
+</header>
+
+<p>This was built and tested on the <strong>Xunzel PACK ZERO+ AX 490 L</strong> solar kit (bought at Leroy Merlin in Portugal), and it only ever <strong>reads</strong>.</p>
+
+<figure>
+  <img src="docs/images/xunzel-pack-zero-plus-wiring-diagram.jpg" alt="Wiring leaflet of the Xunzel PACK ZERO+ AX 490 L kit: panels, PV protection, IXS-ON-7200W-48V inverter and two SOLARX-Lithium WALL.2 batteries" width="1200">
+  <figcaption>The wiring leaflet that comes with the kit (our photo, straightened and cleaned up). Leaflet artwork &copy; Xunzel, shown only to identify the kit.</figcaption>
+</figure>
+
+<h2 id="why">Read-only by design (and why)</h2>
+<p class="note"><strong>This project never changes anything in the inverter. It only sends read commands.</strong></p>
+<ul>
+  <li><strong>The kit is plug and play.</strong> The PACK ZERO+ is a matched set (lithium batteries, inverter, panels, PV protection), and Xunzel pre-configured the inverter for it.</li>
+  <li><strong>The settings are not ours to touch.</strong> Battery voltages, charge limits and battery type were chosen for the batteries in the kit. A wrong value can hurt the batteries.</li>
+  <li><strong>Warranty.</strong> Changing settings or resetting the inverter could make a warranty claim harder. We do not know exactly what Xunzel's warranty allows over RS-232, and we do not want to find out the hard way. Look, never touch.</li>
+  <li><strong>To change a setting,</strong> do it on the inverter itself, following Xunzel's instructions.</li>
+</ul>
+<p>The rule is enforced in code: the script has a whitelist of query commands (all start with <code>Q</code>), one place that writes to the port, no way to type a command, and a self-test that checks setting commands are refused.</p>
+
+<h2 id="wiring">Wiring</h2>
+<figure>
+  <img src="docs/images/rs232-cable-rj45-db9.png" alt="Cable drawing: inverter RJ45 pins 1, 2 and 8 to DB9 pins 2, 3 and 5" width="1000">
+</figure>
+<table>
+  <tr><th>Inverter RJ45 pin</th><th>Typical wire colour</th><th>DB9 pin</th><th>Signal</th></tr>
+  <tr><td>1</td><td>white/orange</td><td>2</td><td>inverter TXD to computer RXD</td></tr>
+  <tr><td>2</td><td>blue</td><td>3</td><td>inverter RXD from computer TXD</td></tr>
+  <tr><td>8</td><td>white/green</td><td>5</td><td>ground</td></tr>
+</table>
+<p>Serial settings: <strong>2400 baud, 8 data bits, no parity, 1 stop bit, no flow control.</strong> You need a USB-to-RS-232 adapter with a DB9 plug (we used an FTDI FT232R). Wire colours differ between cables, so check them with a meter.</p>
+<p><strong>Test the adapter first, without the inverter:</strong> short DB9 pins 2 and 3 and check that what you type comes back. Never type into a terminal while the inverter is connected.</p>
+
+<h2 id="start">Quick start</h2>
+<pre><code>git clone https://github.com/Terramadas/Xunzel-RS232-Protocol.git
+cd Xunzel-RS232-Protocol
+python3 xunzel_readonly.py</code></pre>
+<p>You get a menu: quick status, live values, ratings and settings, flags, warnings, serial number and firmware, default settings, a repeating watch, CSV logging and a self-test. The script finds a USB serial port by itself. Everything is also written to <code>xunzel_readonly.log</code>, which contains your inverter's serial number, so do not publish it.</p>
+
+<h2 id="commands">What you can read</h2>
+<table>
+  <tr><th>Command</th><th>What it gives you</th></tr>
+  <tr><td><code>QPIGS</code></td><td>Live values: grid and output voltage, load, battery voltage and charge, PV voltage and power, status bits (21 fields)</td></tr>
+  <tr><td><code>QMOD</code></td><td>Operating mode (battery, line, standby, fault, ...)</td></tr>
+  <tr><td><code>QPIWS</code></td><td>Warning and fault bits (36 characters)</td></tr>
+  <tr><td><code>QPIRI</code></td><td>Ratings and current settings (28 fields)</td></tr>
+  <tr><td><code>QFLAG</code></td><td>Which options are switched on or off</td></tr>
+  <tr><td><code>QDI</code></td><td>Default settings (read only; it does not apply them)</td></tr>
+  <tr><td><code>QID</code>, <code>QVFW</code></td><td>Serial number, firmware version</td></tr>
+</table>
+<p>A frame is the ASCII command, two CRC bytes and a carriage return. The CRC is CRC-16/XMODEM with one extra rule: a CRC byte equal to <code>0x28</code>, <code>0x0D</code> or <code>0x0A</code> is increased by one. Byte-by-byte frames, a C CRC routine and all field tables are in the <a href="https://github.com/Terramadas/Xunzel-RS232-Protocol/blob/main/docs/PROTOCOL.md">protocol reference</a>.</p>
+
+<h2 id="found">What we found on this inverter</h2>
+<p>The Xunzel IXS-ON 7200 speaks the common Voltronic/Axpert &ldquo;PI30&rdquo; protocol, but not exactly as the generic 2014 document describes it.</p>
+<ul>
+  <li><strong>Works:</strong> QMOD, QPIGS, QPIWS, QFLAG, QPIRI, QDI, QID, QVFW.</li>
+  <li><strong>Answers NAK (not supported):</strong> QPI and QVFW2.</li>
+  <li><strong>More fields than documented:</strong> QPIGS 21 (document: 17), QPIRI 28 (25), QDI 26 (25), QPIWS 36 characters (32).</li>
+  <li><strong>Reply times:</strong> 0.05 to 0.5 s. Polling QPIGS every 10 seconds is comfortable.</li>
+  <li><strong>Off-grid:</strong> with no grid connected, QPIWS always reports LINE_FAIL. That is normal.</li>
+  <li><strong>Firmware seen:</strong> <code>VERFW:00069.07</code>.</li>
+</ul>
+
+<h2 id="battery">The battery and the LIb setting</h2>
+<p>The kit uses 2 &times; Xunzel SOLARX-Lithium WALL2 10KWH-51.2V-200A (SXLW210K). Battery 2 is linked to battery 1 by a data cable, and battery 1 to the inverter. That link is RS485 and is a <strong>separate port</strong> from the RS-232 port used here, so this project never touches it.</p>
+<p>On the inverter, PROGRAM 05 (battery type) is set to <strong>LIb</strong>, &ldquo;LIb-protocol compatible battery&rdquo;. The inverter reports battery type code <strong>8</strong>, which very likely means LIb (our reading, not confirmed by Xunzel). The battery's charging range is 55.2 to 57.6 V and its end-of-discharge voltage is 44.8 V (backup use) or 48 V (cycle use); the inverter's bulk and float 57.6 V and under-voltage 46.4 V sit inside those limits. The inverter's max charging current reads 10 A, which looks low for two 200 A batteries; with a communicating battery the real limit is normally set by the battery over the data cable. We have not confirmed this.</p>
+
+<h2 id="faq">FAQ</h2>
+<h3>Can I use this on other Voltronic or Axpert inverters?</h3>
+<p>Possibly. The protocol family is the same, but fields differ between models. Reports are welcome. Remove your serial number from any output you share.</p>
+<h3>Is it safe for my warranty?</h3>
+<p>We only send read queries, like monitoring software does, but we cannot speak for Xunzel. Check your own warranty terms.</p>
+<h3>Why not use WatchPower?</h3>
+<p>You can. This is a small, scriptable alternative that runs without a GUI, logs to CSV and is easy to turn into an always-on logger (Arduino or Raspberry Pi with a MAX3232 level shifter).</p>
+<h3>Where is the manual for the IXS-ON 7200?</h3>
+<p>Your kit comes with a paper copy. Xunzel's datasheet lists the specifications; for the full manual ask <a href="mailto:info@xunzel.com">info@xunzel.com</a>.</p>
+
+<footer>
+  <p><strong>Not affiliated with Xunzel.</strong> Names and logos belong to their owners. This is an independent hobby project, provided as is under the <a href="https://github.com/Terramadas/Xunzel-RS232-Protocol/blob/main/LICENSE">MIT licence</a>, with no warranty. You are responsible for your own equipment and for checking your own warranty terms.</p>
+  <p><a href="https://github.com/Terramadas/Xunzel-RS232-Protocol">github.com/Terramadas/Xunzel-RS232-Protocol</a></p>
+</footer>
+
+</main>
+</body>
+</html>
