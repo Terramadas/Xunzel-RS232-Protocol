@@ -1,0 +1,5 @@
+xunzel_readonly.log
+*.csv
+__pycache__/
+.DS_Store
+._*

@@ -1,0 +1,142 @@
+Sample output of xunzel_readonly.py (menu options 1, 3, 6 and 7), read from a Xunzel IXS-ON 7200
+(PACK ZERO+ AX 490 L kit, firmware VERFW 00069.07) on 2026-11-23. The serial number and the USB adapter
+id were removed. Nothing was sent to the inverter except the read-only queries shown.
+
+=== 2026-11-23 14:44:04  port=/dev/cu.usbserial-XXXXXXXX  baud=2400 8N1  (READ-ONLY) ===
+
+> QMOD  (reply in 0.06 s)
+  raw : b'(B\xe7\xc9\r'
+  CRC : OK
+  text: B
+  mode: Battery
+
+> QPIGS  (reply in 0.49 s)
+  raw : b'(000.0 00.0 230.0 50.0 0092 0081 001 449 54.10 000 099 0042 00.2 273.1 00.00 00000 00010000 00 00 00073 010\xcc!\r'
+  CRC : OK
+  text: 000.0 00.0 230.0 50.0 0092 0081 001 449 54.10 000 099 0042 00.2 273.1 00.00 00000 00010000 00 00 00073 010
+   1  Grid voltage                                               000.0     V
+   2  Grid frequency                                             00.0      Hz
+   3  AC output voltage                                          230.0     V
+   4  AC output frequency                                        50.0      Hz
+   5  AC output apparent power                                   0092      VA
+   6  AC output active power                                     0081      W
+   7  Output load (max of W% / VA%)                              001       %
+   8  BUS voltage                                                449       V
+   9  Battery voltage                                            54.10     V
+  10  Battery charging current                                   000       A
+  11  Battery capacity                                           099       %
+  12  Inverter heat sink temperature                             0042      (degC? see manual note)
+  13  PV input current for battery                               00.2      A
+  14  PV input voltage 1                                         273.1     V
+  15  Battery voltage from SCC                                   00.00     V
+  16  Battery discharge current                                  00000     A
+  17  Device status b7..b0                                       00010000  
+  18  Battery voltage offset for fans on [not in this manual]    00        
+  19  EEPROM version [not in this manual]                        00        
+  20  PV charging power [not in this manual]                     00073     W
+  21  Device status 2 b10..b8 [not in this manual]               010       
+      status bits set: load ON
+      status 2 bits set (common PI30 meaning): switch on
+
+> QPIWS  (reply in 0.21 s)
+  raw : b'(000001000000000000000000000000000000\xb2\xa7\r'
+  CRC : OK
+  text: 000001000000000000000000000000000000
+  36 status chars; active warnings/faults: LINE_FAIL (a5)
+
+> QFLAG  (reply in 0.10 s)
+  raw : b'(ExyzDabjkuv\x8d\xbd\r'
+  CRC : OK
+  text: ExyzDabjkuv
+  LCD backlight                              enabled
+  Alarm when primary source interrupted      enabled
+  Fault code record                          enabled
+  Buzzer                                     disabled
+  Overload bypass                            disabled
+  Power saving                               disabled
+  LCD return to default page (1 min)         disabled
+  Overload restart                           disabled
+  Over-temperature restart                   disabled
+=== 2026-11-23 14:44:21  port=/dev/cu.usbserial-XXXXXXXX  baud=2400 8N1  (READ-ONLY) ===
+
+> QPIRI  (reply in 0.49 s)
+  raw : b'(230.0 31.3 230.0 50.0 31.3 7200 7200 48.0 47.0 46.4 57.6 57.6 8 30 010 0 0 2 9 01 0 0 54.0 0 1 480 0 000\x8dn\r'
+  CRC : OK
+  text: 230.0 31.3 230.0 50.0 31.3 7200 7200 48.0 47.0 46.4 57.6 57.6 8 30 010 0 0 2 9 01 0 0 54.0 0 1 480 0 000
+   1  Grid rating voltage (V)                                        230.0
+   2  Grid rating current (A)                                        31.3
+   3  AC output rating voltage (V)                                   230.0
+   4  AC output rating frequency (Hz)                                50.0
+   5  AC output rating current (A)                                   31.3
+   6  AC output rating apparent power (VA)                           7200
+   7  AC output rating active power (W)                              7200
+   8  Battery rating voltage (V)                                     48.0
+   9  Battery re-charge voltage (V)                                  47.0
+  10  Battery under voltage (V)                                      46.4
+  11  Battery bulk voltage (V)                                       57.6
+  12  Battery float voltage (V)                                      57.6
+  13  Battery type (0 AGM, 1 Flooded, 2 User)                        8
+  14  Current max AC charging current (A)                            30
+  15  Current max charging current (A)                               010
+  16  Input voltage range (0 Appliance, 1 UPS)                       0
+  17  Output source priority (0 Utility first, 1 Solar first, 2 SBU first) 0
+  18  Charger source priority (0 Utility, 1 Solar, 2 Solar+Utility, 3 Solar only) 2
+  19  Parallel max number                                            9
+  20  Machine type (00 grid tie, 01 off grid, 10 hybrid)             01
+  21  Topology (0 transformerless, 1 transformer)                    0
+  22  Output mode (00 single)                                        0
+  23  Battery re-discharge voltage (V)                               54.0
+  24  PV OK condition for parallel                                   0
+  25  PV power balance (0 max current, 1 max power)                  1
+  26  (unknown extra field)                                          480
+  27  (unknown extra field)                                          0
+  28  (unknown extra field)                                          000
+  note: 28 fields; names follow the manual's order. Check against the inverter's display.
+=== 2026-11-23 14:44:31  port=/dev/cu.usbserial-XXXXXXXX  baud=2400 8N1  (READ-ONLY) ===
+
+> QID  (reply in 0.11 s)
+  raw : b'(<serial number removed>\r'
+  CRC : OK
+  text: <14-digit serial number removed>
+
+> QVFW  (reply in 0.11 s)
+  raw : b'(VERFW:00069.07\x0e\x99\r'
+  CRC : OK
+  text: VERFW:00069.07
+
+> QVFW2  (reply in 0.08 s)
+  raw : b'(NAKss\r'
+  CRC : OK
+  the inverter answered NAK (command not supported)
+=== 2026-11-23 14:44:46  port=/dev/cu.usbserial-XXXXXXXX  baud=2400 8N1  (READ-ONLY) ===
+
+> QDI  (reply in 0.37 s)
+  raw : b'(230.0 50.0 0030 44.0 54.0 56.4 46.0 60 0 0 2 0 0 0 0 0 1 1 1 0 1 0 54.0 0 1 224\xeb\xbc\r'
+  CRC : OK
+  text: 230.0 50.0 0030 44.0 54.0 56.4 46.0 60 0 0 2 0 0 0 0 0 1 1 1 0 1 0 54.0 0 1 224
+   1  AC output voltage (V)                                          230.0
+   2  AC output frequency (Hz)                                       50.0
+   3  Max AC charging current (A)                                    0030
+   4  Battery under voltage (V)                                      44.0
+   5  Charging float voltage (V)                                     54.0
+   6  Charging bulk voltage (V)                                      56.4
+   7  Battery re-charge voltage (V)                                  46.0
+   8  Max charging current (A)                                       60
+   9  AC input voltage range                                         0
+  10  Output source priority                                         0
+  11  Charger source priority                                        2
+  12  Battery type                                                   0
+  13  Buzzer                                                         0
+  14  Power saving                                                   0
+  15  Overload restart                                               0
+  16  Over-temperature restart                                       0
+  17  LCD backlight                                                  1
+  18  Alarm on primary interrupt                                     1
+  19  Fault code record                                              1
+  20  Overload bypass                                                0
+  21  LCD return to default                                          1
+  22  Output mode                                                    0
+  23  Battery re-discharge voltage (V)                               54.0
+  24  PV OK condition                                                0
+  25  PV power balance                                               1
+  26  (unknown extra field)                                          224
