@@ -167,6 +167,17 @@ Reports from other Xunzel or Voltronic-family inverters are welcome. If you shar
 | `docs/images/` | Wiring leaflet, cable drawing (PNG and SVG) |
 | `examples/sample-output.txt` | Real output, serial number removed |
 
+## Related work and sources
+
+We are not the first to look at this protocol family. Independent sources that we found useful, and that agree with what we measured:
+
+- **[Voltronic RS232 Protocol document, HS/MS/MSX, 2014-08-22](https://dwaves.de/wp-content/uploads/2023/06/Voltronic_Auslesen_Protocoll_HS_MS_MSX_RS232_Protocol_20140822_after_current_upgrade.pdf)** — the generic protocol document this project is checked against throughout `docs/PROTOCOL.md`.
+- **[dwaves.de: WatchPower and Voltronic/MasterPower inverters on GNU/Linux](https://dwaves.de/2023/06/27/web-power-statistics-for-masterpower-voltronic-how-to-run-watchpower-software-gnu-linux-debian-reading-writing-good-quality-voltronic-aka-masterpower-pms-5k-48top-off-grid-aka-axpert-mks-ii-5k-ak/)** — a detailed write-up of reading a Voltronic/MasterPower inverter over USB/serial on Linux. It independently confirms the same CRC routine (CRC-16 with the 0x1021 polynomial, bumping any `0x28`/`0x0D`/`0x0A` byte by one) and the same 2400 8N1 serial settings. It also notes that different inverter firmware versions can return different field counts for the same command, which matches what we see between the generic document and this Xunzel (more fields in `QPIGS`, `QPIRI`, `QDI` and `QPIWS`). Worth reading if you want to see the wired, desktop WatchPower software in use on Linux rather than the phone app; that desktop tool talks to the inverter over a cable and, as far as that page shows, keeps its logs and charts local.
+- **[manio/skymax-demo](https://github.com/manio/skymax-demo)** — an open-source C poller for the same protocol family, with raw-command support. A useful second implementation to compare frames against.
+- **[Skyboo: Monitoring a Voltronic Axpert MEX inverter under Linux](https://skyboo.net/2017/03/monitoring-voltronic-power-axpert-mex-inverter-under-linux/)** — another independent write-up of the same protocol family.
+
+If you know of other Xunzel-specific or IXS-ON-specific resources, open an issue or a pull request.
+
 ## Search terms
 
 Xunzel IXS-ON 7200 RS232, Xunzel inverter RS-232 protocol, Xunzel PACK ZERO+ monitoring, IXS-ON-7200W-48V serial port, Xunzel inverter logging, Xunzel SOLARX-Lithium WALL2 inverter communication, Voltronic Axpert compatible Xunzel, QPIGS QPIRI QMOD Xunzel, Leroy Merlin Xunzel kit, WatchPower alternative.
