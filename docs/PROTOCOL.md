@@ -6,6 +6,11 @@ The inverter speaks the Voltronic/Axpert "PI30" family of protocols. The general
 
 **Golden rule: only send the query commands in section 5. Never send a setting command (section 7).**
 
+For the front-panel LCD menu itself (Programs 00-99, reached by holding the panel's own
+buttons — nothing to do with RS-232), see **[MANUAL-LCD-SETTING.md](MANUAL-LCD-SETTING.md)**,
+transcribed from the paper manual. It documents every program, including the two destructive
+ones referenced in section 7 below (Program 37 and Program 93).
+
 Status labels:
 
 - **VERIFIED**: seen working on the Xunzel IXS-ON 7200.
@@ -360,9 +365,13 @@ data that `QET`/`QLT`/`QED`/`QEM`/`QEY`/`QLD`/`QLM`/`QLY` read back:
 | Program 37 | Resets all stored PV generated power and output load energy totals to zero |
 | Program 93 | Erases the entire data log |
 
+Full details, LCD codes and every other menu program are in
+[MANUAL-LCD-SETTING.md](MANUAL-LCD-SETTING.md).
+
 If you want a local, non-cloud way to pull the full history off the inverter instead of
 re-reading totals over RS-232, the LCD's USB Function Setting menu can export the data log to a
-USB flash drive — see the "Ideas for later" section of the README.
+USB flash drive — see [MANUAL-LCD-SETTING.md](MANUAL-LCD-SETTING.md#1-usb-function-setting) or
+the "Ideas for later" section of the README.
 
 ---
 

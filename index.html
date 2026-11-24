@@ -75,6 +75,7 @@
       <li><a href="#commands">Commands</a></li>
       <li><a href="#found">What we found</a></li>
       <li><a href="#battery">Battery</a></li>
+      <li><a href="#lcd-menu">LCD menu reference</a></li>
       <li><a href="#related">Related work</a></li>
       <li><a href="#faq">FAQ</a></li>
     </ul>
@@ -158,12 +159,17 @@ python3 xunzel_readonly.py</code></pre>
   <li><strong>Off-grid:</strong> with no grid connected, QPIWS always reports LINE_FAIL. That is normal.</li>
   <li><strong>Firmware seen:</strong> <code>VERFW:00069.07</code>.</li>
   <li><strong>Energy totals exist too, undocumented:</strong> eight more commands beyond the live values &mdash; QET/QLT (all-time) and date-based QED/QEM/QEY (PV) and QLD/QLM/QLY (load) &mdash; found by matching the inverter's own dAY/MON/YEA/tOL display screens against a test log, and cross-checked against the paper manual. Replies are an 8-digit Wh value. The scale on the day-period fields (QED/QLD) is not fully confirmed yet; verify against your own display before relying on them for anything precise.</li>
-  <li><strong>Two LCD menu items to leave alone:</strong> Program 37 (&ldquo;reset all stored PV generated power and output load energy&rdquo;) and Program 93 (&ldquo;erase all data log&rdquo;). Neither is reachable over RS-232, but don't navigate into or confirm them on the front panel &mdash; they would wipe the very totals above. The LCD's USB Function Setting menu, on the other hand, can export the full data log to a USB flash drive: a fully local, non-cloud alternative we have not tried ourselves yet.</li>
+  <li><strong>Two LCD menu items to leave alone:</strong> Program 37 (&ldquo;reset all stored PV generated power and output load energy&rdquo;) and Program 93 (&ldquo;erase all data log&rdquo;). Neither is reachable over RS-232, but don't navigate into or confirm them on the front panel &mdash; they would wipe the very totals above. The LCD's USB Function Setting menu, on the other hand, can export the full data log to a USB flash drive: a fully local, non-cloud alternative we have not tried ourselves yet. Full menu reference: <a href="#lcd-menu">LCD menu reference</a>.</li>
 </ul>
 
 <h2 id="battery">The battery and the LIb setting</h2>
 <p>The kit uses 2 &times; Xunzel SOLARX-Lithium WALL2 10KWH-51.2V-200A (SXLW210K). Battery 2 is linked to battery 1 by a data cable, and battery 1 to the inverter. That link is RS485 and is a <strong>separate port</strong> from the RS-232 port used here, so this project never touches it.</p>
 <p>On the inverter, PROGRAM 05 (battery type) is set to <strong>LIb</strong>, &ldquo;LIb-protocol compatible battery&rdquo;. The inverter reports battery type code <strong>8</strong>, which very likely means LIb (our reading, not confirmed by Xunzel). The battery's charging range is 55.2 to 57.6 V and its end-of-discharge voltage is 44.8 V (backup use) or 48 V (cycle use); the inverter's bulk and float 57.6 V and under-voltage 46.4 V sit inside those limits. The inverter's max charging current reads 10 A, which looks low for two 200 A batteries; with a communicating battery the real limit is normally set by the battery over the data cable. We have not confirmed this.</p>
+
+<h2 id="lcd-menu">LCD menu reference (Programs 00-99)</h2>
+<p>The front-panel LCD has its own setup menu, entirely separate from RS-232: hold the panel's Enter button for 3 seconds to open it, pick a program number, confirm or back out. We transcribed the full chapter from the paper manual &mdash; every program from 00 to 99, each option's LCD code, and the two timer and USB sub-menus &mdash; into one reference table.</p>
+<p>It covers things like output source priority (Program 01), battery type including the <strong>LIb</strong> setting this kit uses (Program 05), charging voltages (26/27/29), battery equalization (30-36), the RGB LED options on the 7.2&nbsp;kW model (51-55), the data log interval and clock (94-99), and the USB Function Setting sub-menu that can <strong>export the full data log to a USB flash drive</strong> &mdash; a fully local alternative to polling energy totals over RS-232. It also documents, in one place, the two destructive items already flagged above: Program 37 and Program 93.</p>
+<p><a href="https://github.com/Terramadas/Xunzel-RS232-Protocol/blob/main/docs/MANUAL-LCD-SETTING.md">Full LCD menu reference &rarr;</a></p>
 
 <h2 id="related">Related work and sources</h2>
 <p>We are not the first to look at this protocol family. Independent sources we found useful, and that agree with what we measured:</p>

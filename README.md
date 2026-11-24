@@ -156,13 +156,13 @@ The Xunzel talks the common Voltronic/Axpert "PI30" protocol, but not exactly th
 - **Off-grid:** with no grid connected, `QPIWS` always reports `LINE_FAIL`. That is normal.
 - **PV voltage matches the leaflet:** the PV input voltage reads about 270 to 280 V in daylight, which fits seven 425 W panels per string as drawn in the leaflet (Voc about 295 V).
 - **Energy totals exist too, undocumented:** besides the live values, the inverter answers eight more commands — `QET`/`QLT` for all-time PV/load energy, and date-based `QED`/`QEM`/`QEY` (PV) and `QLD`/`QLM`/`QLY` (load) for a given day, month or year. None of these are in the 2014 generic document; we found them by matching the inverter's own `dAY`/`MON`/`YEA`/`tOL` display screens against a test log, and cross-checked against the paper manual. The reply is an 8-digit number in Wh. We have not fully confirmed the scale on the day-period fields (`QED`/`QLD`) — verify against your own display before relying on them for anything precise. Details in [docs/PROTOCOL.md](docs/PROTOCOL.md#68-energy-totals-qet-qlt-qed-qem-qey-qld-qlm-qly-verified).
-- **Two LCD menu items to leave alone:** the paper manual lists Program 37 ("reset all stored PV generated power and output load energy") and Program 93 ("erase all data log"). Neither is reachable over RS-232 — there is no way to send them by accident with this tool — but don't navigate into or confirm them on the front panel, since they would wipe the very totals above.
+- **Two LCD menu items to leave alone:** the paper manual lists Program 37 ("reset all stored PV generated power and output load energy") and Program 93 ("erase all data log"). Neither is reachable over RS-232 — there is no way to send them by accident with this tool — but don't navigate into or confirm them on the front panel, since they would wipe the very totals above. Full menu reference: [docs/MANUAL-LCD-SETTING.md](docs/MANUAL-LCD-SETTING.md).
 
 ## Ideas for later
 
 - A small always-on logger (Arduino Ethernet or Raspberry Pi with a MAX3232 level shifter) that stores `QPIGS` readings and serves them to a NAS or Home Assistant. The CSV format of `--csv` is the planned log format.
 - The kit has two PV inputs (PV1 and PV2). Newer Voltronic documents describe a command for the second one; it is not in the document we used, so we have not tried it.
-- The LCD's USB Function Setting menu can export the inverter's data log straight to a USB flash drive — a fully local, non-cloud way to get the full history off the inverter without polling the energy commands at all. We have not tried this ourselves yet.
+- The LCD's USB Function Setting menu can export the inverter's data log straight to a USB flash drive — a fully local, non-cloud way to get the full history off the inverter without polling the energy commands at all. We have not tried this ourselves yet. See [docs/MANUAL-LCD-SETTING.md](docs/MANUAL-LCD-SETTING.md#1-usb-function-setting).
 
 Reports from other Xunzel or Voltronic-family inverters are welcome. If you share output, please remove your serial number first.
 
@@ -172,6 +172,7 @@ Reports from other Xunzel or Voltronic-family inverters are welcome. If you shar
 |---|---|
 | `xunzel_readonly.py` | The read-only tool with menu |
 | `docs/PROTOCOL.md` | Protocol reference: frames, CRC, commands, field tables |
+| `docs/MANUAL-LCD-SETTING.md` | Front-panel LCD menu reference, Programs 00-99, transcribed from the paper manual |
 | `index.html` | The same story as a web page (for GitHub Pages) |
 | `docs/images/` | Wiring leaflet, cable drawing (PNG and SVG) |
 | `examples/sample-output.txt` | Real output, serial number removed |
