@@ -141,7 +141,11 @@ python3 xunzel_readonly.py</code></pre>
   <tr><td><code>QFLAG</code></td><td>Which options are switched on or off</td></tr>
   <tr><td><code>QDI</code></td><td>Default settings (read only; it does not apply them)</td></tr>
   <tr><td><code>QID</code>, <code>QVFW</code></td><td>Serial number, firmware version</td></tr>
+  <tr><td><code>QET</code>, <code>QLT</code></td><td>Total PV energy generated / total load energy consumed, all-time (Wh)</td></tr>
+  <tr><td><code>QED</code>, <code>QEM</code>, <code>QEY</code></td><td>PV energy generated for one day / month / year (Wh)</td></tr>
+  <tr><td><code>QLD</code>, <code>QLM</code>, <code>QLY</code></td><td>Load energy consumed for one day / month / year (Wh)</td></tr>
 </table>
+<p>The energy commands take a date as an argument (e.g. <code>QED20261124</code>, <code>QEY2026</code>) rather than being fixed strings, so the CRC is different for every date the tool builds the right frame for you.</p>
 <p>A frame is the ASCII command, two CRC bytes and a carriage return. The CRC is CRC-16/XMODEM with one extra rule: a CRC byte equal to <code>0x28</code>, <code>0x0D</code> or <code>0x0A</code> is increased by one. Byte-by-byte frames, a C CRC routine and all field tables are in the <a href="https://github.com/Terramadas/Xunzel-RS232-Protocol/blob/main/docs/PROTOCOL.md">protocol reference</a>.</p>
 
 <h2 id="found">What we found on this inverter</h2>
@@ -153,6 +157,8 @@ python3 xunzel_readonly.py</code></pre>
   <li><strong>Reply times:</strong> 0.05 to 0.5 s. Polling QPIGS every 10 seconds is comfortable.</li>
   <li><strong>Off-grid:</strong> with no grid connected, QPIWS always reports LINE_FAIL. That is normal.</li>
   <li><strong>Firmware seen:</strong> <code>VERFW:00069.07</code>.</li>
+  <li><strong>Energy totals exist too, undocumented:</strong> eight more commands beyond the live values &mdash; QET/QLT (all-time) and date-based QED/QEM/QEY (PV) and QLD/QLM/QLY (load) &mdash; found by matching the inverter's own dAY/MON/YEA/tOL display screens against a test log, and cross-checked against the paper manual. Replies are an 8-digit Wh value. The scale on the day-period fields (QED/QLD) is not fully confirmed yet; verify against your own display before relying on them for anything precise.</li>
+  <li><strong>Two LCD menu items to leave alone:</strong> Program 37 (&ldquo;reset all stored PV generated power and output load energy&rdquo;) and Program 93 (&ldquo;erase all data log&rdquo;). Neither is reachable over RS-232, but don't navigate into or confirm them on the front panel &mdash; they would wipe the very totals above. The LCD's USB Function Setting menu, on the other hand, can export the full data log to a USB flash drive: a fully local, non-cloud alternative we have not tried ourselves yet.</li>
 </ul>
 
 <h2 id="battery">The battery and the LIb setting</h2>

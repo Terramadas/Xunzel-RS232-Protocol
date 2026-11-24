@@ -80,6 +80,19 @@ Start with `crc = 0`, call `crc_update` for each byte, then `crc_final`. The sam
 | `QBOOT` | 51 42 4f 4f 54 0b 88 0d | GENERIC (may answer NAK) |
 | `QOPM` | 51 4f 50 4d a5 c5 0d | GENERIC (documented for other models; may answer NAK) |
 | `QPGS0` | 51 50 47 53 30 3f da 0d | GENERIC (parallel units; may answer NAK) |
+| `QET` | 51 45 54 81 b6 0d | VERIFIED: total PV energy, all-time |
+| `QLT` | 51 4c 54 3b 2e 0d | VERIFIED: total load energy, all-time |
+| `QED20261124` | 51 45 44 32 30 32 36 31 31 32 34 f2 45 0d | VERIFIED: PV energy for 2026-11-24 (pattern `QED` + `YYYYMMDD`) |
+| `QEM202611` | 51 45 4d 32 30 32 36 31 31 60 fc 0d | VERIFIED: PV energy for 2026-11 (pattern `QEM` + `YYYYMM`) |
+| `QEY2026` | 51 45 59 32 30 32 36 f7 ef 0d | VERIFIED: PV energy for 2026 (pattern `QEY` + `YYYY`) |
+| `QLD20261124` | 51 4c 44 32 30 32 36 31 31 32 34 d7 4b 0d | VERIFIED: load energy for 2026-11-24 (pattern `QLD` + `YYYYMMDD`) |
+| `QLM202611` | 51 4c 4d 32 30 32 36 31 31 39 f5 0d | VERIFIED: load energy for 2026-11 (pattern `QLM` + `YYYYMM`) |
+| `QLY2026` | 51 4c 59 32 30 32 36 bf 0e 0d | VERIFIED: load energy for 2026 (pattern `QLY` + `YYYY`) |
+
+The six date-based commands are not fixed strings: the CRC bytes shown are only valid for that
+exact date argument, because the CRC is computed over the whole frame including the digits.
+`xunzel_readonly.py` computes the right CRC for whatever date you ask for; see
+`energy_commands_for_today()`.
 
 ## 5. The read-only commands
 
@@ -97,6 +110,9 @@ Start with `crc = 0`, call `crc_update` for each byte, then `crc_final`. The sam
 | `QDI` | Factory default settings (6.6). It only reports them; it does not apply them |
 | `QMCHGCR`, `QMUCHGCR` | Lists of selectable charging currents |
 | `QBOOT`, `QOPM`, `QPGSn` | Extra queries from the generic document; not needed for monitoring |
+| `QET`, `QLT` | All-time PV energy generated / load energy consumed, in Wh (section 6.8) |
+| `QED`, `QEM`, `QEY` | PV energy generated for one day / month / year, Wh (section 6.8) |
+| `QLD`, `QLM`, `QLY` | Load energy consumed for one day / month / year, Wh (section 6.8) |
 
 Other query commands exist in newer PI30 documents (for example for the second PV input). They are not in the generic document and have not been tried here.
 
@@ -280,6 +296,37 @@ These are the sort of values set for a lithium battery. They are exactly the set
 
 `QID` returns `(` plus 14 digits. `QVFW` returns `(VERFW:NNNNN.NN`. Keep your serial number out of anything you publish.
 
+### 6.8 Energy totals: QET, QLT, QED, QEM, QEY, QLD, QLM, QLY (VERIFIED)
+
+None of these are in the 2014 generic document. We found them by matching the inverter's own
+front-panel screens — reached by pressing the display button repeatedly until `dAY`, `MON`,
+`YEA` and `tOL` appear — against a test log of RS-232 replies, then cross-checking the LCD
+menu's energy-related entries in the paper manual.
+
+| Command | Argument | Returns |
+|---|---|---|
+| `QET` | none | Total PV energy ever generated, in Wh (matches the `tOL` PV screen) |
+| `QLT` | none | Total load (output) energy ever consumed, in Wh (matches the `tOL` load screen) |
+| `QED` | `YYYYMMDD` | PV energy generated on that calendar day, in Wh (matches the `dAY` PV screen) |
+| `QEM` | `YYYYMM` | PV energy generated in that calendar month, in Wh (matches the `MON` PV screen) |
+| `QEY` | `YYYY` | PV energy generated in that calendar year, in Wh (matches the `YEA` PV screen) |
+| `QLD` | `YYYYMMDD` | Load energy consumed on that calendar day, in Wh |
+| `QLM` | `YYYYMM` | Load energy consumed in that calendar month, in Wh |
+| `QLY` | `YYYY` | Load energy consumed in that calendar year, in Wh |
+
+The reply format is `(` + 8 digits + CRC + CR, e.g. `(00724100` for `QET`. On our test day
+(2026-11-24) `QEY2026` and `QET` returned the same value (`00724100`), which makes sense: the
+inverter was commissioned this year, so "this year" and "all-time" are currently identical. We
+have **not fully confirmed the unit scale on the day-period fields** (`QED`/`QLD`) against the
+display — the month and year fields matched the `MON`/`YEA`/`tOL` screens directly in Wh, but we
+did not have a second day's worth of display readings to triple-check `dAY` the same way. Treat
+`QED`/`QLD` as Wh for now, and verify against your own display before relying on them for
+anything precise.
+
+Because these commands take a date as an argument, the CRC is different for every date — there
+is no single fixed frame to memorize. `xunzel_readonly.py` builds the correct frame and CRC for
+you; see `energy_commands_for_today()` and menu option 8 / CLI `--list`.
+
 ---
 
 ## 7. Commands we never send
@@ -302,6 +349,20 @@ The generic document also lists **setting commands**. They change the inverter, 
 | `POPM`, `PPCP` | output mode, parallel charger priority |
 
 Wrong battery voltages or charge limits can damage a battery, and changing settings may affect your warranty. Change settings only on the inverter itself, following the manufacturer's instructions.
+
+**Also never confirm these two items on the front-panel LCD menu.** They are not RS-232 commands
+at all — there is no way to send them over the serial link, by accident or otherwise — but they
+are destructive LCD-menu programs found in the paper manual, and they would erase exactly the
+data that `QET`/`QLT`/`QED`/`QEM`/`QEY`/`QLD`/`QLM`/`QLY` read back:
+
+| Program | What it does |
+|---|---|
+| Program 37 | Resets all stored PV generated power and output load energy totals to zero |
+| Program 93 | Erases the entire data log |
+
+If you want a local, non-cloud way to pull the full history off the inverter instead of
+re-reading totals over RS-232, the LCD's USB Function Setting menu can export the data log to a
+USB flash drive — see the "Ideas for later" section of the README.
 
 ---
 
@@ -336,6 +397,7 @@ A simple log line, the same as the tool's `--csv` output: `2026-11-23T14:25:52Z,
 | `QDI` | 25 fields | 26 fields |
 | `QPIWS` | 32 characters | 36 characters |
 | `QFLAG` letters | upper case | lower case |
+| Energy totals (`QET`/`QLT`/`QED`/`QEM`/`QEY`/`QLD`/`QLM`/`QLY`) | not in the generic document | VERIFIED, found via the LCD `dAY`/`MON`/`YEA`/`tOL` screens and the paper manual |
 | Models covered | HS, MS, MSX (1 to 5 kVA) | The 7200 W is not listed, so treat every label as likely until checked |
 
 ---

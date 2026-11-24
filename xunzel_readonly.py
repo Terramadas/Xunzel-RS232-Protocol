@@ -15,17 +15,22 @@ Usage:
   python3 xunzel_readonly.py                      # opens the menu (just pick a number)
   python3 xunzel_readonly.py --menu               # same
   python3 xunzel_readonly.py QMOD QPIGS           # run chosen read-only commands directly
-  python3 xunzel_readonly.py all                  # every read-only command
+  python3 xunzel_readonly.py all                  # every read-only command, incl. energy totals
+  python3 xunzel_readonly.py QET QLT QEY2026      # all-time + this-year PV energy totals (Wh)
   python3 xunzel_readonly.py --repeat 6 --every 10 QPIGS
   python3 xunzel_readonly.py --csv data.csv QPIGS # append UTC,command,raw payload
   python3 xunzel_readonly.py --list               # show the allowed commands
   python3 xunzel_readonly.py --selftest           # CRC + safety tests, no serial port needed
   python3 xunzel_readonly.py --port /dev/cu.usbserial-XXXX --baud 2400 QPIGS
 
+Besides the fixed commands, six date-based energy totals are allowed:
+QED<YYYYMMDD>, QEM<YYYYMM>, QEY<YYYY> (PV generated), and QLD/QLM/QLY (load
+consumed) for the same periods, plus QET/QLT for all-time totals. See --list.
+
 The menu only offers fixed read-only actions; you never type a command into it.
 Everything printed is also appended to xunzel_readonly.log in the current folder.
 """
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 import datetime
 import glob
 import os
@@ -56,13 +61,26 @@ READ_ONLY = {
     "QMUCHGCR": "List of selectable max utility charging currents",
     "QBOOT":    "DSP bootstrap flag (may be NAK)",
     "QOPM":     "Output mode (documented for 4000/5000; may be NAK)",
+    "QET":      "Total PV energy generated, all-time (Wh)",
+    "QLT":      "Total load (output) energy, all-time (Wh)",
 }
 QPGS_RE = re.compile(r"^QPGS[0-9]$")  # parallel info, per unit number (may be NAK)
+
+# Energy-by-period queries: not fixed strings, each takes a date/month/year
+# argument. Not in the generic 2014 protocol document; found on this inverter
+# by comparing its front-panel "dAY/MON/YEA/tOL" screens against these replies.
+QED_RE = re.compile(r"^QED\d{8}$")   # PV energy for one day, argument YYYYMMDD
+QEM_RE = re.compile(r"^QEM\d{6}$")   # PV energy for one month, argument YYYYMM
+QEY_RE = re.compile(r"^QEY\d{4}$")   # PV energy for one year, argument YYYY
+QLD_RE = re.compile(r"^QLD\d{8}$")   # load energy for one day, argument YYYYMMDD
+QLM_RE = re.compile(r"^QLM\d{6}$")   # load energy for one month, argument YYYYMM
+QLY_RE = re.compile(r"^QLY\d{4}$")   # load energy for one year, argument YYYY
+ENERGY_PATTERNS = [QPGS_RE, QED_RE, QEM_RE, QEY_RE, QLD_RE, QLM_RE, QLY_RE]
 DEFAULT_SET = ["QMOD", "QPIGS", "QPIWS", "QFLAG"]
 
 
 def is_allowed(cmd: str) -> bool:
-    return cmd in READ_ONLY or bool(QPGS_RE.match(cmd))
+    return cmd in READ_ONLY or any(p.match(cmd) for p in ENERGY_PATTERNS)
 
 
 def refuse(cmd: str):
@@ -317,7 +335,9 @@ def selftest():
     # CRC vectors produced by compiling the manual's own CRC.c
     vectors = {"QPI": "beac", "QID": "d6ea", "QVFW": "6299", "QVFW2": "c3f5", "QPIRI": "f854",
                "QFLAG": "9874", "QPIGS": "b7a9", "QMOD": "49c1", "QPIWS": "b4da", "QDI": "711b",
-               "QMCHGCR": "d855", "QMUCHGCR": "2634", "QBOOT": "0b88", "QOPM": "a5c5", "QPGS0": "3fda"}
+               "QMCHGCR": "d855", "QMUCHGCR": "2634", "QBOOT": "0b88", "QOPM": "a5c5", "QPGS0": "3fda",
+               "QET": "81b6", "QLT": "3b2e", "QED20261124": "f245", "QEM202611": "60fc",
+               "QEY2026": "f7ef", "QLD20261124": "d74b", "QLM202611": "39f5", "QLY2026": "bf0e"}
     for c, h in vectors.items():
         check("CRC %-8s = %s (manual CRC.c)" % (c, h), voltronic_crc(c.encode()).hex() == h)
     check("QPIGS frame bytes", build_frame("QPIGS").hex(" ") == "51 50 49 47 53 b7 a9 0d")
@@ -343,13 +363,30 @@ def selftest():
         check("real %s reply passes CRC" % name, split_reply(r)[1])
     check("QPIGS reply has 21 fields", len(split_reply(gs)[0].split(" ")) == 21)
 
+    # Real energy-query replies captured from the inverter on 2026-11-24
+    energy_real = {
+        "QET":          b"(00724100\x19\xb9\r",
+        "QLT":          b"(00297000\x1a\xab\r",
+        "QED20261124":  b"(00001139\xedD\r",
+        "QEM202611":    b"(00182200\xac?\r",
+        "QEY2026":      b"(00724100\x19\xb9\r",
+        "QLD20261124":  b"(00001948\xcdS\r",
+        "QLM202611":    b"(00117600d\xc6\r",
+        "QLY2026":      b"(00297000\x1a\xab\r",
+    }
+    for name, r in energy_real.items():
+        check("real %s reply passes CRC" % name, split_reply(r)[1])
+
     # Safety: nothing but whitelisted queries can be framed
     for bad in ["PF", "PCP00", "POP02", "PBT01", "PSDV42.0", "PCVV56.4", "PBFT54.0", "PEA", "PDA",
                 "F50", "MCHGC010", "MUCHGC020", "POPM00", "PBCV48.0", "PBDV54.0", "PGR01",
-                "QPIGS\rPF", "qpigs", "QPGS10", "", " QPIGS", "QPIGSX"]:
+                "QPIGS\rPF", "qpigs", "QPGS10", "", " QPIGS", "QPIGSX",
+                "QED2026112", "QED202611245", "QEDaaaaaaaa", "QEM20261", "QEY20266",
+                "QLD2026112", "QLM20261", "QLY20266", "QET ", "QETX"]:
         blocked = not is_allowed(bad)
         check("blocked %r" % bad, blocked)
-    for good in list(READ_ONLY) + ["QPGS0", "QPGS9"]:
+    for good in (list(READ_ONLY) + ["QPGS0", "QPGS9", "QED20261124", "QEM202611", "QEY2026",
+                                     "QLD20261124", "QLM202611", "QLY2026"]):
         check("allowed %s and framed with leading Q" % good, build_frame(good)[:1] == b"Q")
     check("every whitelisted command starts with Q", all(c.startswith("Q") for c in READ_ONLY))
     print("\n%s" % ("ALL TESTS PASSED" if not fails else "%d TEST(S) FAILED" % fails))
@@ -381,6 +418,17 @@ def run_commands(port, baud, cmds, repeat=1, every=10.0, csv_path=None):
         link.close()
 
 
+def energy_commands_for_today():
+    """QED/QEM/QEY/QLD/QLM/QLY for today's date, in UTC, plus the all-time totals."""
+    now = time.gmtime()
+    day = time.strftime("%Y%m%d", now)
+    month = time.strftime("%Y%m", now)
+    year = time.strftime("%Y", now)
+    return ["QET", "QLT",
+            "QED" + day, "QEM" + month, "QEY" + year,
+            "QLD" + day, "QLM" + month, "QLY" + year]
+
+
 def ask(prompt, default=""):
     try:
         text = input("%s%s: " % (prompt, " [%s]" % default if default != "" else ""))
@@ -406,7 +454,8 @@ def menu(port=None, baud=2400):
         "5": ("Warnings and faults (QPIWS)", ["QPIWS"]),
         "6": ("Serial number and firmware (QID, QVFW, QVFW2)", ["QID", "QVFW", "QVFW2"]),
         "7": ("Default settings (QDI, read only)", ["QDI"]),
-        "8": ("Every read-only command in the manual", list(READ_ONLY) + ["QPGS0"]),
+        "8": ("Energy totals: today, this month, this year, all-time", energy_commands_for_today()),
+        "9": ("Every fixed read-only command in the manual", list(READ_ONLY) + ["QPGS0"]),
     }
     while True:
         ports = find_ports()
@@ -415,10 +464,10 @@ def menu(port=None, baud=2400):
         print("Port: %s   Baud: %d   (nothing here can change the inverter)\n" % (shown, baud))
         for k, (label, _) in actions.items():
             print("  %s  %s" % (k, label))
-        print("  9  Watch live values repeatedly (Ctrl-C to stop)")
-        print(" 10  Log live values to a CSV file (Ctrl-C to stop)")
-        print(" 11  Self-test (CRC + safety checks, no inverter needed)")
-        print(" 12  List the allowed commands")
+        print(" 10  Watch live values repeatedly (Ctrl-C to stop)")
+        print(" 11  Log live values to a CSV file (Ctrl-C to stop)")
+        print(" 12  Self-test (CRC + safety checks, no inverter needed)")
+        print(" 13  List the allowed commands")
         print("  p  Choose serial port / baud rate")
         print("  0  Quit")
         choice = ask("\nChoose").lower()
@@ -431,23 +480,33 @@ def menu(port=None, baud=2400):
                     print("No USB serial port found. Replug the cable, or pick one with p.")
                 else:
                     run_commands(use, baud, actions[choice][1])
-            elif choice in ("9", "10"):
+            elif choice in ("10", "11"):
                 use = port or (ports[0] if ports else None)
                 if not use:
                     print("No USB serial port found. Replug the cable, or pick one with p.")
                 else:
-                    every = float(ask("Seconds between readings", "10" if choice == "9" else "30"))
+                    every = float(ask("Seconds between readings", "10" if choice == "10" else "30"))
                     csv_path = None
-                    if choice == "10":
+                    if choice == "11":
                         csv_path = ask("CSV file name", "xunzel_log.csv")
                     print("Running. Press Ctrl-C to stop.")
                     run_commands(use, baud, ["QPIGS"], repeat=0, every=every, csv_path=csv_path)
-            elif choice == "11":
-                selftest()
             elif choice == "12":
+                selftest()
+            elif choice == "13":
                 for k, v in READ_ONLY.items():
                     print("%-9s %-34s %s" % (k, build_frame(k).hex(" "), v))
                 print("%-9s %-34s %s" % ("QPGS0-9", "", "Parallel info for unit n (may be NAK)"))
+                print()
+                print("Energy totals (date is an argument you supply, not a fixed command):")
+                print("%-14s %-8s %s" % ("QET", "fixed", "Total PV energy generated, all-time (Wh)"))
+                print("%-14s %-8s %s" % ("QLT", "fixed", "Total load (output) energy, all-time (Wh)"))
+                print("%-14s %-8s %s" % ("QED<YYYYMMDD>", "e.g.", "QED20261124 - PV energy for one day (Wh)"))
+                print("%-14s %-8s %s" % ("QEM<YYYYMM>", "e.g.", "QEM202611   - PV energy for one month (Wh)"))
+                print("%-14s %-8s %s" % ("QEY<YYYY>", "e.g.", "QEY2026     - PV energy for one year (Wh)"))
+                print("%-14s %-8s %s" % ("QLD<YYYYMMDD>", "e.g.", "QLD20261124 - load energy for one day (Wh)"))
+                print("%-14s %-8s %s" % ("QLM<YYYYMM>", "e.g.", "QLM202611   - load energy for one month (Wh)"))
+                print("%-14s %-8s %s" % ("QLY<YYYY>", "e.g.", "QLY2026     - load energy for one year (Wh)"))
             elif choice == "p":
                 for n, pth in enumerate(ports, 1):
                     print("  %d  %s" % (n, pth))
@@ -491,6 +550,16 @@ def main():
             for k, v in READ_ONLY.items():
                 print("%-9s %-34s %s" % (k, build_frame(k).hex(" "), v))
             print("%-9s %-34s %s" % ("QPGS0-9", "", "Parallel info for unit n (may be NAK)"))
+            print()
+            print("Energy totals (date is an argument you supply, not a fixed command):")
+            print("%-14s %-8s %s" % ("QET", "fixed", "Total PV energy generated, all-time (Wh)"))
+            print("%-14s %-8s %s" % ("QLT", "fixed", "Total load (output) energy, all-time (Wh)"))
+            print("%-14s %-8s %s" % ("QED<YYYYMMDD>", "e.g.", "QED20261124 - PV energy for one day (Wh)"))
+            print("%-14s %-8s %s" % ("QEM<YYYYMM>", "e.g.", "QEM202611   - PV energy for one month (Wh)"))
+            print("%-14s %-8s %s" % ("QEY<YYYY>", "e.g.", "QEY2026     - PV energy for one year (Wh)"))
+            print("%-14s %-8s %s" % ("QLD<YYYYMMDD>", "e.g.", "QLD20261124 - load energy for one day (Wh)"))
+            print("%-14s %-8s %s" % ("QLM<YYYYMM>", "e.g.", "QLM202611   - load energy for one month (Wh)"))
+            print("%-14s %-8s %s" % ("QLY<YYYY>", "e.g.", "QLY2026     - load energy for one year (Wh)"))
             return
         elif a == "--selftest":
             sys.exit(1 if selftest() else 0)
@@ -499,7 +568,7 @@ def main():
         elif a == "--version":
             print(__version__); return
         elif a == "all":
-            cmds += list(READ_ONLY) + ["QPGS0"]
+            cmds += list(READ_ONLY) + ["QPGS0"] + energy_commands_for_today()
         else:
             cmds.append(a)
         i += 1
